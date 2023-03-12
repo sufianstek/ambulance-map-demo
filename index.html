@@ -1,47 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="refresh" content="300">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE-edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     .noHover{
       pointer-events: none;
+    }
+    body {
+      padding: 0;
+      margin: 0;
   }
-body {
-    padding: 0;
-    margin: 0;
-}
-html, body, #map {
-    height: 100%;
-    width: 100vw;
-}
+  html, body, #map {
+      height: 100%;
+      width: 100vw;
+  }
   </style>
- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
-     integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
-     crossorigin=""/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+  crossorigin=""/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
-     integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
-     crossorigin=""></script>
+  integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+  crossorigin=""></script>
 
 </head>
+<br>
+<div class="container">
+<h6>Click anywhere on the map to get the shortest route distance between 2 hospital/ambulance location</h6>
+</div>
+<div id="map" style="width: 90%; height: 90%; margin: auto;margin-top: 2rem;"></div>
 
-
-<div id="map" style="width: 90%; height: 90%;margin: auto;margin-top: 2rem;"></div>
-
-<script type="text/javascript" src="/js/basemarkers.js"></script>
-<script type="text/javascript" src="/js/icons.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='maps/basemarkers-demo.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/icons.js') }}"></script>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://unpkg.com/leaflet-knn@0.1.0/leaflet-knn.js"></script>
 <script>
-  var map = L.map('map').setView([3.1328226035281546,101.70165638373675], 12);
+  var map = L.map('map').setView([3.1328226035281546,101.70165638373675], 9);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
+
 
 var baseMarkers;
 
@@ -77,10 +83,13 @@ map.on('click', function(ev){
   try{
   router1.spliceWaypoints(0, 2);
   router2.spliceWaypoints(0, 2);
+  map.removeLayer(newMarker);
   }
   catch(err) {
     
   }
+  newMarker = L.marker(ev.latlng).addTo(map);
+
   var nearestResult1 = baseIndex.nearest(ev.latlng, 1)[0];
   basepopup1=nearestResult1.layer.feature.properties.base
   nearestResult1.layer.bindPopup(basepopup1, {autoClose:false}).openPopup();
@@ -110,7 +119,9 @@ map.on('click', function(ev){
     createMarker: function() { return null; },
     summaryTemplate :'<h2>' + basepopup2 + ' =====> Site</h2><h2><b>{distance}, {time}</b></h2><h2>{name}</h2>'
   }).addTo(map);
+
   
+
   setTimeout(
   function() 
   {
