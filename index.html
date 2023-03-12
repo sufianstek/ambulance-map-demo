@@ -1,168 +1,47 @@
-{% extends "base.html" %}
-{% block nav %}{% endblock %}
-{% block head %}
-{{super()}}
+<!DOCTYPE html>
+<html>
 <head>
   <meta http-equiv="refresh" content="300">
   <style>
     .noHover{
       pointer-events: none;
   }
+body {
+    padding: 0;
+    margin: 0;
+}
+html, body, #map {
+    height: 100%;
+    width: 100vw;
+}
   </style>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/universal.css') }}" />
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}" />
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+     integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+     crossorigin=""/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+     integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+     crossorigin=""></script>
 
 </head>
 
-{% endblock %}
-{% block content %}
-OFFDUTY
+
 <div id="map" style="width: 90%; height: 90%;margin: auto;margin-top: 2rem;"></div>
 
-
-<!---######################## OFFCANVAS ################################-->
-<div class="offcanvas offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="offcanvasScrolling" aria-labelledby="offcanvasScrollingLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="offcanvasScrollingLabel">Ambulans Status</h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body" id="ambulans_offcanvas">
-    {% for a in ambulans_list %}
-    <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
-      <button type="button" class="btn btn-light" style="font-weight: bold;width:90px;" data-bs-toggle="modal" data-bs-target="#modal_{{a.ambulans_rn}}">{{a.ambulans_rn}}</button>
-      <button type="button" 
-      {% if a.last_status == 'AVAILABLE' %}
-      class="btn btn-success noHover" 
-      {% elif a.last_status == 'ROSAK' %}
-      class="btn btn-danger noHover"
-      {% elif a.last_status == 'RESPON KES' %}
-      class="btn btn-info noHover"
-      {% elif a.last_status == 'IFC' %}
-      class="btn btn-warning noHover"
-      {% else %}
-      class="btn btn-secondary noHover"
-      {% endif %}
-      style="width:120px">{{a.last_status}}</button>
-      &nbsp;
-        <form action="/change_status_admin" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          <input type="hidden" name="ambulans_id" value="{{a.id}}">
-          <input type="hidden" name="lat_long" value="">
-          <select id="change_status" name="change_status" class="form-control" onchange="this.form.submit()" style="width: 110px;text-align:center">
-            <option value="" selected disabled>Ubah</option>
-            <option value="AVAILABLE">Available</option>
-            <option value="RESPON KES">Respon kes</option>
-            <option value="IFC">IFC</option>
-            <option value="OFFDUTY">Offduty</option>
-            <option value="ROSAK">Rosak</option>
-          </select>
-        </form>
-    </div>
-    &nbsp;
-    
-<!----############## AMBULANS MODAL #############----------->
-<div class="modal fade" id="modal_{{a.ambulans_rn}}" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="false">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">{{a.ambulans_rn}}</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <h6>Status: {{a.last_status}}</h6>
-        <h6>Masa kemaskini: {{dateform(a.last_event_time)}}</h6>
-        <h6>Lokasi: {{address(a.last_latlong)}}</h6>
-        <table class="table" style="font-size: small;">
-          <thead>
-            <tr>
-              <th scope="col">Status ditukar</th>
-              <th scope="col">Masa</th>
-              <th scope="col">Lokasi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for log in logs_list|reverse if log.ambulans_id == a.id %}
-            {% if loop.index <=5 %}
-            <tr>
-              <td><button type="button" 
-                {% if log.event_status == 'AVAILABLE' %}
-                class="btn btn-success btn-sm noHover" 
-                {% elif log.event_status == 'ROSAK' %}
-                class="btn btn-danger btn-sm noHover"
-                {% elif log.event_status == 'RESPON KES' %}
-                class="btn btn-info btn-sm noHover"
-                {% else %}
-                class="btn btn-secondary btn-sm noHover"
-                {% endif %}
-                style="width:90px">{{log.event_status}}</button></td>
-              <td>{{dateform(log.event_time)}}</td>
-              <td>{{address(log.event_latlong)}}</td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
-        
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-{% endfor %}
-  </div>
-</div>
-{% endblock %}
-{% block scripts%}
-{{ super() }}
-<script type="text/javascript" src="{{ url_for('static', filename='maps/data.js') }}"></script>
-<script type="text/javascript" src="{{ url_for('static', filename='maps/basemarkers.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='maps/basemarkers-demo.js') }}"></script>
 <script type="text/javascript" src="{{ url_for('static', filename='js/icons.js') }}"></script>
 <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 <script src="https://unpkg.com/leaflet-knn@0.1.0/leaflet-knn.js"></script>
 <script>
-  var map = L.map('map').setView([3.31281, 103.183501], 9);
+  var map = L.map('map').setView([3.1328226035281546,101.70165638373675], 12);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
-
-  /*function style(feature) {
-    return {
-      weight: 2,
-      opacity: 1,
-      color: 'blue',
-      dashArray: '3',
-      fillOpacity: 0,
-      fillColor: 'lightblue'
-    };
-  }*/
-
-  var geojson;
-
-  /* global statesData */
-  geojson = L.geoJSON(statesData, {
-    style: function(feature) {
-        switch (feature.properties.zon) {
-            case 'kuantan': return {color: "orange", opacity: 1, dashArray: '5',fillOpacity: 0};
-            case 'rompin':   return {color: "brown", opacity: 1, dashArray: '5',fillOpacity: 0};
-            case 'pekan':   return {color: "purple", opacity: 1, dashArray: '5',fillOpacity: 0};
-        }
-    }
-}).addTo(map);
-
-  geojson.eachLayer(function (layer) {
-    layer.bindPopup("Primary team: " + layer.feature.properties.primary + "<br>" + "Secondary team: " + layer.feature.properties.secondary);
-});
-
-
-
 
 
 var baseMarkers;
@@ -176,37 +55,6 @@ baseMarkers = L.geoJson(bases, {
 baseMarkers.eachLayer(function (layer) {
   layer.bindPopup(layer.feature.properties.base);
 });
-
-  var markers = [
-    {% for marker in ambulans_list %}
-    {% if marker.last_latlong %}
-  L.marker([{{ marker.last_latlong| safe }}], 
-  {% if marker.last_status == 'AVAILABLE'%}
-  {icon: greenIcon}
-  {% elif marker.last_status == 'ROSAK'%}
-  {icon: redIcon}
-  {% elif marker.last_status == 'RESPON KES'%}
-  {icon: blueIcon}
-  {% elif marker.last_status == 'OFFDUTY'%}
-  {icon: greyIcon}
-  {% elif marker.last_status == 'IFC'%}
-  {icon: goldIcon}
-  {% endif %}
-  )
-    .bindPopup("{{ marker.ambulans_rn| safe }}")
-    .openPopup(),
-    {% endif %}
-    {% endfor %}
-          ]
-
-var shelterMarkers = L.featureGroup();
-
-for (var i = 0; i < markers.length; i++) {
-  var currentShelter = markers[i];
-  currentShelter.addTo(shelterMarkers);
-}
-
-map.addLayer(shelterMarkers);
 
 L.Control.geocoder({
   position: 'topright',
@@ -222,42 +70,7 @@ L.Control.geocoder({
 })
   .addTo(map);
 
-/*var bounds;
-var markersDisplayed = false;
-
-map.on('moveend zoomend', function(e) {
-  bounds = map.getBounds();
-  var zoom = map.getZoom();
-  if (zoom > 8) {
-    baseMarkers.eachLayer(function (layer) {
-      if (bounds.contains(layer.getLatLng())) {
-        markersDisplayed = true;
-        layer.openPopup();
-      }
-    });
-    }
-  else if (markersDisplayed) {
-    markersDisplayed = false;
-    baseMarkers.eachLayer(function (layer) {
-      if (bounds.contains(layer.getLatLng())) {
-        layer.closePopup();
-      }
-    });
-  }
-});*/
-
-/*
-L.Routing.control({
-  waypoints:[
-  L.latLng(3.469668, 102.376274),
-  L.latLng(2.880129, 102.409226)
-  ]
-}).addTo(map);
-*/
-
 baseIndex = leafletKnn(baseMarkers);
-
-/*map.fitBounds(baseMarkers.getBounds());*/
 
 
 map.on('click', function(ev){
@@ -299,9 +112,6 @@ map.on('click', function(ev){
     summaryTemplate :'<h2>' + basepopup2 + ' =====> Site</h2><h2><b>{distance}, {time}</b></h2><h2>{name}</h2>'
   }).addTo(map);
   
-  var newMarker = new L.marker(ev.latlng).addTo(map);
-  /*$(".leaflet-routing-container").find('table').remove();*/
-  map.addLayer(geojson);
   setTimeout(
   function() 
   {
@@ -310,49 +120,9 @@ map.on('click', function(ev){
 
 });
 
-/*
-map.on('click', function(e) {
-  alert(e.latlng);
-});
-*/
 
-  $(document).ready(function() {
-    $('#status_btn').click();
-    $("#base_toggle").click(function(){
-      if (map.hasLayer(baseMarkers) == true){
-        map.removeLayer(baseMarkers);
-      }
-      else{
-        map.addLayer(baseMarkers);
-      }
-      
-    }); 
-    $("#ambulance_toggle").click(function(){
-      if (map.hasLayer(shelterMarkers) == true){
-        map.removeLayer(shelterMarkers);
-      }
-      else{
-        map.addLayer(shelterMarkers);
-      }
-      
-    });
-    $("#target_toggle").click(function(){
-      if (map.hasLayer(geojson) == true){
-        map.removeLayer(geojson);
-      }
-      else{
-        map.addLayer(geojson);
-      }
-      
-    });
-     
-    /*setInterval(function(){ 
-      $("#ambulans_offcanvas").load(window.location.href + " #ambulans_offcanvas" );
-  }, 5000);*/
-	});
 
 </script>
-<script>
+</body>
 
-</script>
-{% endblock %}
+</html>
