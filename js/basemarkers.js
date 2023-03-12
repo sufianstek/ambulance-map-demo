@@ -5,12 +5,12 @@ var bases =
     {
       "type": "Feature",
       "properties": {
-        "base": "Hospital Kuala Lumpur"
+        "base": "HTAA"
       },
       "geometry": {
         "coordinates": [
-          101.70132905919235,
-          3.17205885326365
+          103.32248464987964,
+          3.8003877671879707
         ],
         "type": "Point"
       }
@@ -18,12 +18,25 @@ var bases =
     {
       "type": "Feature",
       "properties": {
-        "base": "Hospital Ampang"
+        "base": "SASMEC"
       },
       "geometry": {
         "coordinates": [
-          101.76406202019405,
-          3.1271207809529926
+          103.30502573814846,
+          3.836910874598601
+        ],
+        "type": "Point"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "base": "Hospital Pekan"
+      },
+      "geometry": {
+        "coordinates": [
+          103.37903812630645,
+          3.501757340382241
         ],
         "type": "Point"
       }
